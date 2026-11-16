@@ -1,0 +1,231 @@
+/* HuGo DS · DatePicker
+ * Variantes: date (simple), range (rango), year (año).
+ * 288px ancho. Tokens del DS.
+ */
+
+/* ── Contenedor ── */
+.dp {
+  box-sizing: border-box;
+  width: 288px;
+  background: #FFFFFF;
+  border-radius: 8px; /* Radius/M */
+  font-family: 'Roboto', sans-serif;
+  user-select: none;
+}
+
+/* ── Header ── */
+.dp__header {
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
+  align-items: center;
+  padding: 8px 12px; /* Spacing/1x · Spacing/1,5x */
+  min-height: 40px;
+}
+
+.dp__title {
+  place-self: center;
+  width: max-content;
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  font-weight: 600; /* SemiBold */
+  line-height: 1.4;
+  letter-spacing: 0.2px;
+  color: #303036; /* Text/Neutral/Default */
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background 150ms ease-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.dp__header .dp__nav:last-of-type { justify-self: end; }
+.dp__header .dp__nav:first-of-type { justify-self: start; }
+.dp__title:hover { background: #F1F4FD; }
+.dp__title:focus-visible { outline: 2px solid #496BE3; outline-offset: 2px; }
+
+.dp__title svg {
+  width: 16px; height: 16px;
+  stroke: #303036; fill: none;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* ── Divider ── */
+.dp__divider {
+  height: 1px;
+  background: #DFE0E6; /* Border/Neutral/Default */
+  margin: 0;
+}
+
+/* ── Row días de la semana ── */
+.dp__weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 8px 12px 0;
+  gap: 0;
+}
+.dp__weekday {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.2px;
+  color: #303036;
+}
+
+/* ── Grid días ── */
+.dp__days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px 0; /* row-gap: Spacing/0,5x, no col-gap */
+  padding: 4px 12px 8px;
+}
+
+/* ── Celda día/año base ── */
+.dp__cell {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.2px;
+  color: #29317F; /* Text/Neutral/Brand */
+  border-radius: 8px; /* Radius/M */
+  cursor: pointer;
+  transition: background 150ms ease-out;
+  position: relative;
+}
+
+/* Default hover */
+.dp__cell:hover:not(.dp__cell--selected):not(.dp__cell--disabled) {
+  background: #F1F4FD; /* Action/Button/Background/Secondary/Hover */
+}
+
+/* Today (no seleccionado) */
+.dp__cell--today:not(.dp__cell--selected) {
+  border: 1px solid #9DB8F3; /* Border/Neutral/Brand */
+}
+
+/* Selected */
+.dp__cell--selected {
+  background: #496BE3; /* Action/Button/Background/Primary/Default */
+  color: #FFFFFF;
+  border-radius: 8px;
+}
+
+/* Disabled / fuera del mes */
+.dp__cell--disabled {
+  color: rgba(48, 48, 54, 0.3); /* #303036 @ 30% */
+  cursor: default;
+}
+
+/* Focus visible */
+.dp__cell:focus-visible:not(.dp__cell--disabled) {
+  outline: 2px solid #496BE3;
+  outline-offset: 0px;
+}
+
+/* ── Range states ── */
+.dp__cell--in-range:not(.dp__cell--range-start):not(.dp__cell--range-end) {
+  background: #F1F4FD;
+  color: #29317F;
+  border-radius: 0; /* franja continua */
+}
+
+.dp__cell--range-start {
+  background: #496BE3;
+  color: #FFFFFF;
+  border-radius: 8px 0 0 8px; /* solo esquinas izquierda */
+}
+
+.dp__cell--range-end {
+  background: #496BE3;
+  color: #FFFFFF;
+  border-radius: 0 8px 8px 0; /* solo esquinas derecha */
+}
+
+/* Si start === end (mismo día) → redondo completo */
+.dp__cell--range-start.dp__cell--range-end {
+  border-radius: 8px;
+}
+
+/* ── Grid años ── */
+.dp__years {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: 8px 12px;
+}
+
+.dp__year-cell {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.2px;
+  color: #29317F;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 150ms ease-out;
+  text-align: center;
+}
+.dp__year-cell:hover:not(.dp__year-cell--selected):not(.dp__year-cell--disabled) {
+  background: #F1F4FD;
+}
+.dp__year-cell--selected {
+  background: #496BE3;
+  color: #FFFFFF;
+}
+.dp__year-cell--current:not(.dp__year-cell--selected) {
+  border: 1px solid #9DB8F3;
+}
+.dp__year-cell--disabled {
+  color: rgba(48, 48, 54, 0.3);
+  cursor: default;
+}
+.dp__year-cell:focus-visible:not(.dp__year-cell--disabled) {
+  outline: 2px solid #496BE3;
+  outline-offset: 0px;
+}
+
+/* ── Icon nav buttons ── */
+.dp__nav {
+  all: unset;
+  box-sizing: border-box;
+  width: 32px; height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #303036;
+  transition: background 150ms ease-out;
+}
+.dp__nav:hover { background: #F1F4FD; }
+.dp__nav:focus-visible { outline: 2px solid #496BE3; outline-offset: 2px; }
+.dp__nav svg {
+  width: 20px; height: 20px;
+  stroke: currentColor; fill: none;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .dp__cell, .dp__year-cell, .dp__nav, .dp__title { transition: none; }
+}
