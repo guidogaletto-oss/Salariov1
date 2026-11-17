@@ -15283,7 +15283,7 @@ __ds_ns.Typography = __ds_scope.Typography;
     <sc-if value="{{ isEditSalario }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:24px">
         <div style="display:flex;flex-direction:column;gap:8px">
-          <label for="sMonto" style="font:500 16px/1.4 Roboto;color:#303036">Salario bruto*</label>
+          <label for="sMonto" style="font:500 16px/1.4 Roboto;color:{{ salLblColor }}">Salario bruto*</label>
           <div style="display:flex;gap:8px">
             <div style="position:relative;flex:none;width:132px">
               <select id="sMon" aria-label="Moneda" disabled="{{ salSinOn }}" value="{{ salForm.moneda }}" onChange="{{ setSalMoneda }}" style="opacity:{{ salAmtOp }};appearance:none;box-sizing:border-box;width:100%;height:56px;padding:0 40px 0 20px;border:1px solid #E1E1EB;border-radius:8px;background:#fff;font:400 16px/1 Roboto;color:#636271;cursor:pointer">
@@ -15293,11 +15293,17 @@ __ds_ns.Typography = __ds_scope.Typography;
               </select>
               <span style="position:absolute;right:16px;top:50%;transform:translateY(-50%);display:flex;pointer-events:none;color:#303036" aria-hidden="true"><i class="ti ti-chevron-down" style="font-size:20px"></i></span>
             </div>
-            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:10px;box-sizing:border-box;height:56px;padding:0 20px;border:1px solid #E1E1EB;border-radius:8px;background:#fff">
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:10px;box-sizing:border-box;height:56px;padding:0 20px;border:1px solid {{ salAmtBorder }};border-radius:8px;background:#fff">
               <span style="font:400 16px/1 Roboto;color:#79788A" aria-hidden="true">$</span>
-              <input id="sMonto" disabled="{{ salSinOn }}" value="{{ salMontoNum }}" onChange="{{ setSalMonto }}" style="all:unset;flex:1;min-width:0;font:400 16px/1 Roboto;color:#303036;opacity:{{ salAmtOp }}">
+              <input id="sMonto" disabled="{{ salSinOn }}" value="{{ salMontoNum }}" onChange="{{ setSalMonto }}" style="all:unset;flex:1;min-width:0;font:400 16px/1 Roboto;color:#303036;opacity:{{ salAmtOp }}" aria-invalid="{{ salMontoErr }}" aria-describedby="sMontoErr">
+              <sc-if value="{{ salMontoErr }}" hint-placeholder-val="{{ false }}">
+                <i class="ti ti-alert-circle" style="flex:none;font-size:20px;color:#B42318" aria-hidden="true"></i>
+              </sc-if>
             </div>
           </div>
+          <sc-if value="{{ salMontoErr }}" hint-placeholder-val="{{ false }}">
+            <span id="sMontoErr" role="alert" style="display:inline-flex;align-items:center;gap:6px;font:400 14px/1.4 Roboto;color:#B42318"><i class="ti ti-alert-circle" style="font-size:16px" aria-hidden="true"></i>Formato inválido. Sólo se admiten números.</span>
+          </sc-if>
         </div>
         <sc-if value="{{ salSinOff }}" hint-placeholder-val="{{ true }}">
         <sc-if value="{{ salIsMX }}" hint-placeholder-val="{{ false }}">
@@ -17075,10 +17081,11 @@ class Component extends DCLogic {
     return 'Cambio retroactivo desde el ' + c.desde + '. Los recibos ya liquidados no se modifican: la diferencia se paga como ajuste en la próxima nómina.';
   }
   saveSal() {
-    const s = this.state; const sx = this.salX(); const sf = s.salForm || this.salDefault(sx);
+    const s = this.state; const sx = this.salX(); const sf = Object.assign({}, s.salForm || this.salDefault(sx));
     const c = this.salCalc(sf, sx); const hoy = fmtUp(new Date());
     const close = { mode: null, key: null, field: null, salEditPending: false, salForm: null };
     const sin = !!sf.sinSal;
+    if (String(sf.monto == null ? '' : sf.monto).replace(/[$\s]/g, '') === '') sf.monto = '$ 0';
     const mv = sin ? 'Sin salario' + (sf.hasta ? ' · hasta ' + String(sf.hasta).toLowerCase() : '') : sf.monto;
     const vv = sin ? mv : sf.monto + ' ' + sx.per;
     const prevMonto = isSin(sx.cur.monto) ? sx.cur.prev : sx.cur.monto;
@@ -17638,7 +17645,9 @@ class Component extends DCLogic {
     const sf = s.salForm || this.salDefault(sxS);
     const salC = this.salCalc(sf, sxS);
     const salFilled = v => String(v == null ? '' : v).replace(/[$\s]/g, '') !== '';
-    const salOk = salFilled(sf.monto) && !!sf.tipo && !!sf.periodo && !!sf.moneda && (sxS.mx ? salFilled(s.salSbc != null ? s.salSbc : '2.828,50') && salFilled(s.salSdi != null ? s.salSdi : '3.379,44') : true);
+    const salMontoRaw = String(sf.monto == null ? '' : sf.monto).replace(/^\$\s*/, '');
+    const salMontoErr = !/^[0-9.,\s]*$/.test(salMontoRaw);
+    const salOk = !salMontoErr && !!sf.tipo && !!sf.periodo && !!sf.moneda && (sxS.mx ? salFilled(s.salSbc != null ? s.salSbc : '2.828,50') && salFilled(s.salSdi != null ? s.salSdi : '3.379,44') : true);
     const salM = v => isSin(v) || s.revealed['Salario'] ? v : '$ ••••••';
     const finOptStyle = on => 'all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:flex-start;gap:14px;padding:16px;border-radius:12px;border:' + (on ? '2px solid #496BE3;background:#F1F4FD' : '1px solid #DFE0E6;background:#fff;margin:1px');
     const finRadioStyle = on => 'flex:none;box-sizing:border-box;margin-top:2px;width:20px;height:20px;border-radius:999px;border:' + (on ? '6px solid #496BE3' : '2px solid #AAAABA') + ';background:#fff';
@@ -18197,6 +18206,7 @@ class Component extends DCLogic {
       setSalObs: e => { const v = e.target.value.slice(0, 100); this.setState(st => ({ salForm: Object.assign({}, sf, st.salForm, { obs: v }) })); },
       salPisar: !!(sxS.pending && !s.salEditPending),
       salPisarTitle: sxS.pending ? 'Ya hay un cambio programado desde el ' + sxS.pending.desde : '',
+      salMontoErr, salLblColor: salMontoErr ? '#7B2121' : '#303036', salAmtBorder: salMontoErr ? '#E47474' : '#E1E1EB',
       salMonedaOpts: sxS.mx ? ['MXN', 'USD'] : ['ARS', 'MXN', 'USD'],
       salTipoOpts: sxS.mx ? ['Día', 'Semana', 'Catorcena', 'Quincena', 'Mes'] : ['Hora', 'Día', 'Quincena', 'Mes'],
       salMontoNum: String(sf.monto || '').replace(/^\$\s*/, ''),
@@ -18266,9 +18276,7 @@ class Component extends DCLogic {
         React.createElement('span', { style: { position: 'relative', display: 'inline-flex', flex: s.field === 'Salario' ? '1 1 0' : undefined, minWidth: 0 }, onMouseEnter: () => { if (s.field === 'Salario' && !salOk) this.setState({ salTip: true }); }, onMouseLeave: () => this.setState({ salTip: false }) },
           s.salTip && s.field === 'Salario' && !salOk ? React.createElement('span', { role: 'tooltip', style: { position: 'absolute', bottom: 'calc(100% + 10px)', left: '50%', transform: 'translateX(-50%)', zIndex: 5, padding: '8px 12px', background: '#34373C', color: '#fff', font: '400 13px/1.4 Roboto', whiteSpace: 'nowrap', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,.15)' } }, 'Completa los datos obligatorios para guardar') : null,
           React.createElement(window.DSHuGo_fac32e.Button, { variant: 'primary', size: 'sm', disabled: s.field === 'Salario' && !salOk, style: { background: s.field === 'Salario' && !salOk ? '#C9C9D6' : '#496BE3', color: '#fff', width: s.field === 'Salario' ? '100%' : undefined, pointerEvents: s.field === 'Salario' && !salOk ? 'none' : undefined }, onClick: () => { if (s.field === 'Salario') { if (!salOk) return; this.saveSal(); return; } this.setState({ mode: null, key: null, field: null }); this.showToast('Cambios guardados'); } }, s.field === 'Salario' ? 'Guardar cambios' : 'Guardar'))
-      )) : (s.mode === 'history' && s.key === 'salario' ? React.createElement('div', { style: { display: 'flex', justifyContent: 'center', width: '100%' } },
-        React.createElement(window.DSHuGo_fac32e.Button, { variant: 'tertiary', size: 'sm', onClick: () => this.setState({ mode: null, key: null, field: null }) }, 'Cerrar')
-      ) : null),
+      )) : null,
       drawerTitle: s.mode === 'edit' ? (s.field === 'Salario' ? 'Editando salario' : s.field) : (h ? h.title : ''),
       drawerNote: h ? h.note : '',
       historyRows: (s.key === 'salario' ? (sxS.pending ? [{ vigencia: 'Desde ' + sxS.pending.desde, valor: sxS.pending.monto + ' ' + sxS.per, registro: 'Laura Ibáñez · programado', tag: 'Programado', sev: 'highlight', pending: true }] : []).concat(sxS.rows) : (h ? h.rows : [])).map(r => Object.assign({ tag: '', sev: 'neutral', pending: false }, r, (s.key === 'salario' && (r.sbc || r.sdi)) ? { valor: r.valor + ' · SBC $ ' + (r.sbc || '—') + ' · SDI $ ' + (r.sdi || '—') } : {})),
